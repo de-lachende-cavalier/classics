@@ -1,0 +1,28 @@
+[package]
+name = "classical_cryptography"
+version = "0.1.0"
+authors = ["John Doe <johndoe@example.com>"]
+edition = "2018"
+publish = false
+
+[profile.release]
+opt-level = 3
+
+[dependencies]
+clap = "2.33"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "shift_bench"
+harness = false
+
+[[bench]]
+name = "monoalphabetic_bench"
+harness = false
+
+[[bench]]
+name = "vigenere_bench"
+harness = false
+
