@@ -9,6 +9,7 @@ pub fn shift_by(n: i8, ch: char) -> char {
         return ch;
     }
 
+    // VecDeque is faster than Vec at rotations
     let mut alphabet = ('A'..='Z').collect::<VecDeque<char>>();
     let abs_shift = (n.abs() % 26) as u32;
     let idx = ch as u32 - 'A' as u32;
