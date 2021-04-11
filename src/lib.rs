@@ -1,43 +1,29 @@
 mod ciphers;
 
-use ciphers::monoalphabetic;
-use ciphers::shift;
-use ciphers::vigenere;
+use ciphers::monoalphabetic::MonoalphaCipher;
+use ciphers::shift::ShiftCipher;
+use ciphers::vigenere::VigenereCipher;
 
-use std::collections::{HashMap, HashSet};
 use std::fs::read_to_string;
 
-/// Checks whether a given string constitutes a valid permutation of an alphabet (in our case just
-/// the English alphabet is available)
-fn is_alphabet(s: &str) -> bool {
-    let available_letters: HashSet<char> = ('A'..='Z').collect();
+pub(crate) trait Cipher {
+    /// Cleans up the input by removing all characters that are not alphanumeric
+    /// (Returns an uppercase String)
+    fn clean_input(input: &str) -> String {
+        let cleaned = input
+            .chars()
+            .filter(|c| c.is_ascii_alphanumeric())
+            .collect::<String>();
 
-    let mut s_letter_count: HashMap<char, u32> = HashMap::new();
-    // from https://stackoverflow.com/questions/64178272/what-is-the-idiomatic-rust-way-to-build-a-hashmap-of-character-counts
-    let s_vec = s.to_uppercase().chars().collect::<Vec<char>>();
-    for ch in s_vec {
-        *s_letter_count.entry(ch).or_insert(0) += 1;
+        cleaned
+            .split_whitespace()
+            .collect::<String>()
+            .to_uppercase()
     }
 
-    // this allows for duplicates
-    let all_keys_are_valid = s_letter_count
-        .keys()
-        .collect::<Vec<_>>()
-        .iter()
-        .all(|ch| available_letters.contains(&ch));
-    // this returns false if there are duplicates
-    let all_letters_appear_once = s_letter_count
-        .values()
-        .collect::<Vec<_>>()
-        .iter()
-        .all(|&count| *count == 1);
-    let has_26_letters = s.len() == 26;
-
-    if has_26_letters && all_keys_are_valid && all_letters_appear_once {
-        true
-    } else {
-        false
-    }
+    // need implementations
+    fn encrypt(&self, plaintext: &str) -> String;
+    fn decrypt(&self, ciphertext: &str) -> String;
 }
 
 /// Gets data based on the CLI args provided (if a file has been specified that one is used
@@ -58,15 +44,21 @@ pub fn encrypt_data(cipher: &str, data: &str, key: &str) -> String {
             if shift_amount.is_err() {
                 panic!("The key used in a shift cipher must be an integer (the amount by which to shift).");
             }
-            shift::encrypt(data, shift_amount.unwrap())
+
+            let sc = ShiftCipher::new(shift_amount.unwrap());
+
+            sc.encrypt(data)
         }
         "monoalphabetic" => {
-            if !is_alphabet(key) {
-                panic!("The key used in a monoalphabetic cipher must be a permutation of the English alphabet.");
-            }
-            monoalphabetic::encrypt(data, key)
+            let mc = MonoalphaCipher::new(key);
+
+            mc.encrypt(data)
         }
-        "vigenere" => vigenere::encrypt(data, key),
+        "vigenere" => {
+            let vc = VigenereCipher::new(key);
+
+            vc.encrypt(data)
+        }
         _ => {
             panic!("This cipher has not yet been implemented or it doesn't exist.");
         }
@@ -80,17 +72,23 @@ pub fn decrypt_data(cipher: &str, data: &str, key: &str) -> String {
             if shift_amount.is_err() {
                 panic!("The key used in a shift cipher must be an integer (the amount by which to shift).");
             }
-            shift::decrypt(data, shift_amount.unwrap())
+
+            let sc = ShiftCipher::new(shift_amount.unwrap());
+
+            sc.decrypt(data)
         }
         "monoalphabetic" => {
-            if !is_alphabet(key) {
-                panic!("The key used in a monoalphabetic cipher must be a permutation of the English alphabet.");
-            }
-            monoalphabetic::decrypt(data, key)
+            let mc = MonoalphaCipher::new(key);
+
+            mc.decrypt(data)
         }
-        "vigenere" => vigenere::decrypt(data, key),
+        "vigenere" => {
+            let vc = VigenereCipher::new(key);
+
+            vc.decrypt(data)
+        }
         _ => {
-            panic!("This ciphers has not yet been implemented or it doesn't exist.");
+            panic!("This cipher has not yet been implemented or it doesn't exist.");
         }
     }
 }
@@ -100,26 +98,27 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_alphabet_detection() {
-        // test a correct alphabet
-        let possible_alphabet: String = ('a'..='z').collect();
-        assert!(is_alphabet(&possible_alphabet));
+    fn test_clean_input() {
+        struct T {}
 
-        // test a correct but scrambled one
-        let possible_alphabet = String::from("klmnopqrstuvwxyzabcdefghij");
-        assert!(is_alphabet(&possible_alphabet));
+        impl Cipher for T {
+            fn encrypt(&self, _plaintext: &str) -> String {
+                String::new()
+            }
+            fn decrypt(&self, _ciphertext: &str) -> String {
+                String::new()
+            }
+        }
 
-        // test an obviously incorrect one
-        let possible_alphabet = String::from("mbwrtoiu14576184tt9123485--");
-        assert!(!is_alphabet(&possible_alphabet));
+        let input = String::from("awesome_testing_functionality with spaces");
+        let expected = String::from("AWESOMETESTINGFUNCTIONALITYWITHSPACES");
+        assert_eq!(expected, T::clean_input(&input));
 
-        // test a subtly incorrect one (missing an 'f', duplicate 'e')
-        let possible_alphabet = String::from("klmnopqrstuvwxyzabcdeeghij");
-        assert!(!is_alphabet(&possible_alphabet));
+        let input = String::from("NoW@wITHéé˛Ånumb3rz00712");
+        let expected = String::from("NOWWITHNUMB3RZ00712");
+        assert_eq!(expected, T::clean_input(&input));
 
-        // test another subtly incorrect one (the number '1' has been appended to a correct one)
-        let possible_alphabet = String::from("klmnopqrstuvwxyzabcdefghij1");
-        assert!(!is_alphabet(&possible_alphabet));
+        assert_eq!("".to_string(), T::clean_input(""));
     }
 
     #[test]
