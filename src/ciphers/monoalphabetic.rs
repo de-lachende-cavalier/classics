@@ -45,7 +45,7 @@ impl MonoalphaCipher {
     /// Builds the HashMap that holds the inverse correspondence between the key alphabet
     /// and the original alphabet (only English in our case), used for decryption.
     fn build_inverse_map(key: &str) -> HashMap<char, char> {
-        let keys = key.chars().collect::<Vec<char>>();
+        let keys = key.to_uppercase().chars().collect::<Vec<char>>();
         let values = ('A'..='Z').collect::<Vec<char>>();
         let mut inverse_map: HashMap<char, char> = HashMap::new();
 
@@ -167,15 +167,27 @@ mod tests {
     fn test_known_pairs() {
         // from https://cryptii.com
         let cipher = MonoalphaCipher::new("zyxwvutsrqponmlkjihgfedcba");
+        let plaintext = "attackatdawn";
         let ciphertext = String::from("zggzxpzgwzdm");
 
-        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt("attackatdawn"));
+        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt(plaintext));
 
-        // as above
+        assert_eq!(
+            <MonoalphaCipher as Cipher>::clean_input(plaintext),
+            cipher.decrypt(&ciphertext)
+        );
+
+        // same source as above
         let cipher = MonoalphaCipher::new("myxnvestrqpowzlkjihgfudabc");
+        let plaintext = "firstman";
         let ciphertext = String::from("erihgwmz");
 
-        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt("firstman"));
+        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt(plaintext));
+
+        assert_eq!(
+            <MonoalphaCipher as Cipher>::clean_input(plaintext),
+            cipher.decrypt(&ciphertext)
+        );
     }
 
     #[test]

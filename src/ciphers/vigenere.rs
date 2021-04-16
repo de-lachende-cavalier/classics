@@ -72,15 +72,27 @@ mod tests {
     fn test_known_pairs() {
         // from https://en.wikipedia.org/wiki/Vigenere_cipher
         let cipher = VigenereCipher::new("lemon");
+        let plaintext = "attackatdawn";
         let ciphertext = String::from("lxfopvefrnhr");
 
-        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt("attackatdawn"));
+        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt(plaintext));
+
+        assert_eq!(
+            <VigenereCipher as Cipher>::clean_input(plaintext),
+            cipher.decrypt(&ciphertext)
+        );
 
         // from https://cryptii.com/
         let cipher = VigenereCipher::new("cryptii");
+        let plaintext = "firstman";
         let ciphertext = String::from("hzphmuip");
 
-        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt("firstman"));
+        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt(plaintext));
+
+        assert_eq!(
+            <VigenereCipher as Cipher>::clean_input(plaintext),
+            cipher.decrypt(&ciphertext)
+        );
     }
 
     #[test]

@@ -92,14 +92,26 @@ mod tests {
     fn test_known_pairs() {
         // from https://cryptii.com
         let cipher = ShiftCipher::new(8);
+        let plaintext = "attackatdawn";
         let ciphertext = String::from("ibbiksibliev");
 
-        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt("attackatdawn"));
+        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt(plaintext));
+
+        assert_eq!(
+            <ShiftCipher as Cipher>::clean_input(plaintext),
+            cipher.decrypt(&ciphertext)
+        );
 
         let cipher = ShiftCipher::new(13);
+        let plaintext = "firstman";
         let ciphertext = String::from("svefgzna");
 
-        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt("firstman"));
+        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt(plaintext));
+
+        assert_eq!(
+            <ShiftCipher as Cipher>::clean_input(plaintext),
+            cipher.decrypt(&ciphertext)
+        );
     }
 
     #[test]
