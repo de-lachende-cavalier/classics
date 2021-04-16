@@ -3,3 +3,6 @@ classical_cryptography is simply way to develop some practice with Rust by imple
 
 # Contributing
 Seeing as I'm learning Rust through this mini-project, all contributions are more than welcome and very appreciated.
+
+# Reference
+A list of classical cipher can be found [here](https://en.wikipedia.org/wiki/Category:Classical_ciphers).
