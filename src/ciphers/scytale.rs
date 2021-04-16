@@ -1,83 +1,104 @@
-// use super::utils::pad;
+use super::utils::pad;
+use crate::Cipher;
 
-// fn get_diameter(s: &str, length: usize) -> usize {
-//     let padded_s = pad(s, length as u32);
+pub struct Scytale {
+    key: usize, // the length
+}
 
-//     padded_s.len() / length
-// }
+impl Scytale {
+    pub fn new(key: usize) -> Self {
+        Scytale { key }
+    }
 
-// fn wrap_around_scytale(text: &str, n: usize) -> String {
-//     let mut unwinded = String::new();
-//     let l = text.len();
+    fn get_diameter(s: &str, length: usize) -> usize {
+        let padded_s = pad(s, length as u32);
 
-//     for i in 0..=l {
-//         for j in (i..l).step_by(n) {
-//             unwinded.push(text.chars().nth(j).unwrap());
-//         }
-//     }
-//     // TODO can i get the proper length in the loops above
-//     // without having to truncate?
-//     unwinded.truncate(l);
+        padded_s.len() / length
+    }
 
-//     unwinded
-// }
+    fn wrap_around_scytale(text: &str, n: usize) -> String {
+        let mut unwinded = String::new();
+        let l = text.len();
 
-// pub fn encrypt(plaintext: &str, length: usize) -> String {
-//     let clean_plaintext = clean_input(plaintext);
+        for i in 0..=l {
+            for j in (i..l).step_by(n) {
+                unwinded.push(text.chars().nth(j).unwrap());
+            }
+        }
+        // TODO can i get the proper length in the loops above
+        // without having to truncate?
+        unwinded.truncate(l);
 
-//     wrap_around_scytale(&clean_plaintext, length)
-// }
+        unwinded
+    }
+}
 
-// pub fn decrypt(ciphertext: &str, length: usize) -> String {
-//     let clean_ciphertext = clean_input(ciphertext);
-//     let diameter = get_diameter(&clean_ciphertext, length);
+impl Cipher for Scytale {
+    fn encrypt(&self, plaintext: &str) -> String {
+        let clean_plaintext = <Scytale as Cipher>::clean_input(plaintext);
 
-//     wrap_around_scytale(&clean_ciphertext, diameter)
-// }
+        Scytale::wrap_around_scytale(&clean_plaintext, self.key)
+    }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
+    fn decrypt(&self, ciphertext: &str) -> String {
+        let clean_ciphertext = <Scytale as Cipher>::clean_input(ciphertext);
+        let diameter = Scytale::get_diameter(&clean_ciphertext, self.key);
 
-//     #[test]
-//     #[should_panic]
-//     fn test_zero_length() {
-//         encrypt("this should fail", 0);
-//     }
+        Scytale::wrap_around_scytale(&clean_ciphertext, diameter)
+    }
+}
 
-//     #[test]
-//     fn test_known_pairs() {
-//         // from https://en.wikipedia.org/wiki/Scytale
-//         let plaintext = "I am hurt very badly help";
-//         let length = 5;
-//         let ciphertext = String::from("Iryyatbhmvaehedlurlp");
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-//         assert_eq!(ciphertext.to_uppercase(), encrypt(plaintext, length));
+    #[test]
+    #[should_panic]
+    fn test_zero_length() {
+        let cipher = Scytale::new(0);
 
-//         assert_eq!(clean_input(plaintext), decrypt(&ciphertext, length));
+        cipher.encrypt("this should fail");
+    }
 
-//         // from 'Programming in Cryptol', page 30
-//         let plaintext = "attackatdawn";
-//         let length = 4; // in the book the diameter is 3
-//         let ciphertext = String::from("ACDTKATAWATN");
+    #[test]
+    fn test_known_pairs() {
+        // from https://en.wikipedia.org/wiki/Scytale
+        let cipher = Scytale::new(5);
+        let plaintext = "I am hurt very badly help";
+        let ciphertext = String::from("Iryyatbhmvaehedlurlp");
 
-//         assert_eq!(ciphertext, encrypt(plaintext, length));
+        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt(plaintext));
 
-//         assert_eq!(clean_input(plaintext), decrypt(&ciphertext, length));
-//     }
+        assert_eq!(
+            <Scytale as Cipher>::clean_input(plaintext),
+            cipher.decrypt(&ciphertext)
+        );
 
-//     #[test]
-//     #[ignore]
-//     fn test_correct() {
-//         let plaintext = String::from("Iamhurtverybadly");
+        // from 'Programming in Cryptol', page 30
+        let cipher = Scytale::new(4); // in the book the diameter is 3
+        let plaintext = "attackatdawn";
+        let ciphertext = String::from("ACDTKATAWATN");
 
-//         // FIXME something very subtle is going on here...
-//         for length in 1..=plaintext.len() {
-//             println!("{}", length);
-//             assert_eq!(
-//                 plaintext.to_uppercase(),
-//                 decrypt(&encrypt(&plaintext, length), length)
-//             );
-//         }
-//     }
-// }
+        assert_eq!(ciphertext, cipher.encrypt(plaintext));
+
+        assert_eq!(
+            <Scytale as Cipher>::clean_input(plaintext),
+            cipher.decrypt(&ciphertext)
+        );
+    }
+
+    #[test]
+    #[ignore]
+    fn test_correct() {
+        let plaintext = String::from("Iamhurtverybadly");
+
+        // FIXME something very subtle is going on here...
+        for length in 1..=plaintext.len() {
+            let cipher = Scytale::new(length);
+            assert_eq!(
+                plaintext.to_uppercase(),
+                cipher.decrypt(&cipher.encrypt(&plaintext))
+            );
+        }
+    }
+}

@@ -106,7 +106,7 @@ mod tests {
     #[ignore]
     fn test_correct() {
         let plaintext = String::from("caesar");
-        
+
         // it's actually just enough to check for shifts from 1 to 25...
         for shift in 0..=127 {
             let cipher = ShiftCipher::new(shift);
