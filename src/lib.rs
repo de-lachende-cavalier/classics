@@ -1,6 +1,7 @@
 mod ciphers;
 
 use ciphers::monoalphabetic::MonoalphaCipher;
+use ciphers::scytale::Scytale;
 use ciphers::shift::ShiftCipher;
 use ciphers::vigenere::VigenereCipher;
 
@@ -21,7 +22,6 @@ pub(crate) trait Cipher {
             .to_uppercase()
     }
 
-    // need implementations
     fn encrypt(&self, plaintext: &str) -> String;
     fn decrypt(&self, ciphertext: &str) -> String;
 }
@@ -39,6 +39,7 @@ pub fn get_data(file: Option<&str>, data: Option<&str>) -> String {
 
 pub fn encrypt_data(cipher: &str, data: &str, key: &str) -> String {
     match cipher {
+        // TODO put all these options in a config file
         "shift" => {
             let shift_amount = key.parse::<i8>();
             if shift_amount.is_err() {
@@ -58,6 +59,16 @@ pub fn encrypt_data(cipher: &str, data: &str, key: &str) -> String {
             let vc = VigenereCipher::new(key);
 
             vc.encrypt(data)
+        }
+        "scytale" => {
+            let length = key.parse::<usize>();
+            if length.is_err() {
+                panic!("The key used for a scytale cipher is the length of the scytale itself, so must be a uint.");
+            }
+
+            let scytale = Scytale::new(length.unwrap());
+
+            scytale.encrypt(data)
         }
         _ => {
             panic!("This cipher has not yet been implemented or it doesn't exist.");
@@ -86,6 +97,16 @@ pub fn decrypt_data(cipher: &str, data: &str, key: &str) -> String {
             let vc = VigenereCipher::new(key);
 
             vc.decrypt(data)
+        }
+        "scytale" => {
+            let length = key.parse::<usize>();
+            if length.is_err() {
+                panic!("The key used for a scytale cipher is the length of the scytale itself, so must be a uint.");
+            }
+
+            let scytale = Scytale::new(length.unwrap());
+
+            scytale.decrypt(data)
         }
         _ => {
             panic!("This cipher has not yet been implemented or it doesn't exist.");

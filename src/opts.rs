@@ -10,7 +10,8 @@ pub fn get_opts() -> ArgMatches<'static> {
         .arg(
             Arg::with_name("cipher")
                 .help("Specifies the cipher to use (use --help to see a complete list).")
-                .long_help("Available options are: shift, monoalphabetic and vigenere.")
+                // TODO put all these options in a config file
+                .long_help("Available options are: shift, monoalphabetic, scytale and vigenere.")
                 .required(true)
                 .takes_value(true)
                 .index(1),

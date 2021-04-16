@@ -11,7 +11,7 @@ impl Scytale {
     }
 
     fn get_diameter(s: &str, length: usize) -> usize {
-        let padded_s = pad(s, length as u32);
+        let padded_s = pad(s, length as u32, '.');
 
         padded_s.len() / length
     }
