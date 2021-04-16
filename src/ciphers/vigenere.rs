@@ -1,35 +1,51 @@
-use super::utils::clean_input;
-// Vigenere is just repeated Caesar after all
-use super::shift::shift_by;
+// Vigenere is just a repeated shift cipher
+use super::shift::ShiftCipher;
+use crate::Cipher;
 
-pub fn encrypt(plaintext: &str, key: &str) -> String {
-    let clean_plaintext = clean_input(plaintext);
-    let upper_key = key.to_uppercase();
-    let mut ciphertext: Vec<char> = Vec::new();
-
-    for (idx, ch) in clean_plaintext.chars().enumerate() {
-        let ch_k = upper_key.as_bytes()[(idx % key.len())];
-        let shift = (ch_k as u32 - 'A' as u32) as i8;
-
-        ciphertext.push(shift_by(shift, ch));
-    }
-
-    ciphertext.iter().collect::<String>()
+pub struct VigenereCipher {
+    key: String,
 }
 
-pub fn decrypt(ciphertext: &str, key: &str) -> String {
-    let clean_ciphertext = clean_input(ciphertext);
-    let upper_key = key.to_uppercase();
-    let mut plaintext: Vec<char> = Vec::new();
+impl VigenereCipher {
+    pub fn new(key: &str) -> Self {
+        VigenereCipher {
+            key: key.to_string(),
+        }
+    }
+}
 
-    for (idx, ch) in clean_ciphertext.chars().enumerate() {
-        let ch_k = upper_key.as_bytes()[(idx % key.len())];
-        let shift = (ch_k as u32 - 'A' as u32) as i8;
+impl Cipher for VigenereCipher {
+    fn encrypt(&self, plaintext: &str) -> String {
+        let clean_plaintext = <VigenereCipher as Cipher>::clean_input(plaintext);
 
-        plaintext.push(shift_by(-shift, ch));
+        let upper_key = self.key.to_uppercase();
+        let mut ciphertext: Vec<char> = Vec::new();
+
+        for (idx, ch) in clean_plaintext.chars().enumerate() {
+            let ch_k = upper_key.as_bytes()[(idx % self.key.len())];
+            let shift = (ch_k as u32 - 'A' as u32) as i8;
+
+            ciphertext.push(ShiftCipher::shift_by(shift, ch));
+        }
+
+        ciphertext.iter().collect::<String>()
     }
 
-    plaintext.iter().collect::<String>()
+    fn decrypt(&self, ciphertext: &str) -> String {
+        let clean_ciphertext = <VigenereCipher as Cipher>::clean_input(ciphertext);
+
+        let upper_key = self.key.to_uppercase();
+        let mut plaintext: Vec<char> = Vec::new();
+
+        for (idx, ch) in clean_ciphertext.chars().enumerate() {
+            let ch_k = upper_key.as_bytes()[(idx % self.key.len())];
+            let shift = (ch_k as u32 - 'A' as u32) as i8;
+
+            plaintext.push(ShiftCipher::shift_by(-shift, ch));
+        }
+
+        plaintext.iter().collect::<String>()
+    }
 }
 
 #[cfg(test)]
@@ -39,46 +55,44 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_empty_key() {
-        let plaintext = String::from("Hello");
+        let cipher = VigenereCipher::new("");
 
-        encrypt(&plaintext, "");
+        cipher.encrypt("Hello");
     }
 
     #[test]
     fn test_key_longer_than_pt() {
-        let plaintext = String::from("shorttext");
-        let key = "testinglongkey";
+        let cipher = VigenereCipher::new("testinglongkey");
         let ciphertext = String::from("llgkbgkih");
 
-        assert_eq!(ciphertext.to_uppercase(), encrypt(&plaintext, key));
+        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt("shorttext"));
     }
 
     #[test]
     fn test_known_pairs() {
         // from https://en.wikipedia.org/wiki/Vigenere_cipher
-        let plaintext = String::from("attackatdawn");
-        let key = "lemon";
-        let ciphertext = String::from("LXFOPVEFRNHR");
+        let cipher = VigenereCipher::new("lemon");
+        let ciphertext = String::from("lxfopvefrnhr");
 
-        assert_eq!(ciphertext, encrypt(&plaintext, key));
+        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt("attackatdawn"));
 
         // from https://cryptii.com/
-        let plaintext = String::from("firstman");
-        let key = "cryptii";
+        let cipher = VigenereCipher::new("cryptii");
         let ciphertext = String::from("hzphmuip");
 
-        assert_eq!(ciphertext.to_uppercase(), encrypt(&plaintext, key));
+        assert_eq!(ciphertext.to_uppercase(), cipher.encrypt("firstman"));
     }
 
     #[test]
+    #[ignore]
     fn test_correct() {
-        let plaintext = String::from("attackatdawn");
-        let key = "lemon";
+        let cipher = VigenereCipher::new("lemon");
+        let plaintext = String::from("lechiffre");
 
-        for _ in 0..10 {
+        for _ in 0..1000 {
             assert_eq!(
                 plaintext.to_uppercase(),
-                decrypt(&encrypt(&plaintext, key), key)
+                cipher.decrypt(&cipher.encrypt(&plaintext))
             );
         }
     }
