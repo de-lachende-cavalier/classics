@@ -3,7 +3,7 @@ use rand_pcg::Pcg64;
 use rand_seeder::Seeder;
 
 pub struct Deck {
-    layout: Vec<u32>, // represent the cards by their bridge suits (1..=54, with 53 and 54 representing the two jokers)
+    layout: Vec<u32>, // represent the cards by their bridge suits 
                       // first joker = 53
                       // second joker = 54
 }
@@ -25,47 +25,38 @@ impl Deck {
     }
 
     pub fn triple_cut(&mut self) {
-        let mut fj_idx = 99; // fj = first joker
-        let mut sj_idx = 99; // sj = second joker
+        let fj_idx; // fj = first joker
+        let sj_idx; // sj = second joker
 
-        // look for the first joker
-        // look for the second joker (the one after the first, ignore the values)
-        for (i, card) in self.layout.iter().enumerate() {
-            if *card == 53 || *card == 54 {
-                if fj_idx == 99 {
-                    // this is the first joker
-                    fj_idx = i;
-                } else if sj_idx == 99 {
-                    // this is the second joker
-                    sj_idx = i;
-                }
-            }
+        let old_layout = &self.layout;
 
-            if fj_idx != 99 && sj_idx != 99 {
-                // no point in wasting instructions
-                break;
-            }
-        }
+        fj_idx = Deck::find_first_joker_index(old_layout);
+        let (above_first, rest) = old_layout.split_at(fj_idx);
 
-        let cur_layout = &self.layout;
-        let (above_first, rest) = cur_layout.split_at(fj_idx);
-        let (mid, below_second) = rest.split_at(sj_idx - 2);
+        // XXX ugly but necessary (for now)
+        let mut r_v = rest.to_vec();
+        let joker = r_v.remove(0);
+
+        sj_idx = Deck::find_first_joker_index(&r_v);
+        let (mid, below_second) = r_v.split_at(sj_idx + 1);
+        // XXX
 
         let mut new_layout: Vec<u32> = Vec::new();
 
         // swap the cards above the first joker with the ones below the second joker
         new_layout.append(&mut Vec::from(below_second));
+        new_layout.push(joker);
         new_layout.append(&mut Vec::from(mid));
         new_layout.append(&mut Vec::from(above_first));
 
         // sanity check
-        assert_eq!(cur_layout.len(), new_layout.len());
+        assert_eq!(old_layout.len(), new_layout.len());
 
         self.layout = new_layout;
     }
 
     // TODO => look into a way to abstract the actual process of the cut (from "let cur_layout..."
-    // onwards (it's very similar to above)
+    // onwards (it's very similar to above))
     pub fn count_cut(&mut self) {
         let bottom_card = self.layout.pop().unwrap();
         // if the bottom card is the joker there's no need to cut
@@ -86,6 +77,22 @@ impl Deck {
         assert_eq!(cur_layout.len(), new_layout.len());
 
         self.layout = new_layout;
+    }
+
+    /// Finds the index corresponding to the first occurence of the joker
+    /// given a certain deck.
+    fn find_first_joker_index(deck: &Vec<u32>) -> usize {
+        let mut joker_idx: usize = 0;
+
+        for (i, v) in deck.iter().enumerate() {
+            // these are the two possible values of the jokers
+            if *v == 53 || *v == 54 {
+                joker_idx = i;
+                break;
+            }
+        }
+
+        joker_idx
     }
 }
 
@@ -135,33 +142,100 @@ mod tests {
     }
 
     #[test]
-    fn test_triple_cut() {
+    fn test_double_cut() {
         let mut deck = Deck::new();
         let old_layout = deck.layout.clone();
 
-        deck.layout.swap(3, 53); // put the second joker in position 3 (swap it with 4)
+        deck.layout.swap(3, 53);
+
         assert_eq!(deck.layout[3], 54);
         assert_eq!(deck.layout[53], 4);
-        assert_eq!(deck.layout[52], 53); // the first joker is in the second to last position
-        // layout: [1, 2, 3, 54, 5, 6 ..., 53, 4]
+        assert_eq!(deck.layout[52], 53); // layout: [1, 2, 3, 54, 5, 6 ..., 53, 4]
 
-        deck.triple_cut(); // layout: [4, 54, 5, 6, 7 ..., 53, 1, 2, 3]
+        deck.triple_cut();
 
         assert_ne!(old_layout, deck.layout);
         assert!(is_proper_deck(&deck));
 
-        let mut expected: Vec<u32> = Vec::new();
-        expected.push(4); // layout: [4]
-        expected.push(54); // layout: [4, 54]
-        // try to recreate the expected situation manually
-        let mut first = (5..=53).collect::<Vec<u32>>(); // [4, 54, 5, 6, 7 ..., 53]
-        let mut second = (1..=3).collect::<Vec<u32>>(); // [1, 2, 3]
+        let expected: Vec<u32> = vec![
+            4, 54, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+            26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+            48, 49, 50, 51, 52, 53, 1, 2, 3,
+        ];
 
-        expected.append(&mut first);
-        expected.append(&mut second);
+        assert_eq!(expected, deck.layout);
+    }
 
-        // XXX test passes but it highlighted a bunch of mistakes in my code
-        // => add some more tests to see if i fixed them for good
+    #[test]
+    fn test_single_cut_above() {
+        let mut deck = Deck::new();
+        let old_layout = deck.layout.clone();
+
+        deck.layout.swap(10, 53);
+        deck.layout.swap(52, 53); // layout: [1, 2, 3 ..., 10, 54, 12, ..., 52, 11, 53]
+
+        assert_eq!(deck.layout[10], 54);
+        assert_eq!(deck.layout[52], 11);
+        assert_eq!(deck.layout[53], 53);
+
+        deck.triple_cut();
+
+        assert_ne!(old_layout, deck.layout);
+        assert!(is_proper_deck(&deck));
+
+        let expected: Vec<u32> = vec![
+            54, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+            33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 11, 53,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+        ];
+
+        assert_eq!(expected, deck.layout);
+    }
+
+    #[test]
+    fn test_back_to_back_jokers() {
+        let mut deck = Deck::new();
+        let old_layout = deck.layout.clone();
+
+        deck.layout.swap(17, 53);
+        deck.layout.swap(18, 52); // layout: [1, 2, 3 ..., 17, 54, 53, ..., 52, 19, 18]
+
+        assert_eq!(deck.layout[17], 54);
+        assert_eq!(deck.layout[53], 18);
+        assert_eq!(deck.layout[18], 53);
+        assert_eq!(deck.layout[52], 19);
+
+        deck.triple_cut();
+
+        assert_ne!(old_layout, deck.layout);
+        assert!(is_proper_deck(&deck));
+
+        let expected: Vec<u32> = vec![
+            20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
+            42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 19, 18, 54, 53, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+            10, 11, 12, 13, 14, 15, 16, 17,
+        ];
+
+        assert_eq!(expected, deck.layout);
+    }
+
+    #[test]
+    fn test_count_cut() {
+        let mut deck = Deck::new();
+        let old_layout = deck.layout.clone();
+
+        deck.layout.swap(5, 53); // layout: [1, 2, 3, 4, 5, 54, 7, 8, ..., 53, 6]
+
+        assert_eq!(deck.layout[5], 54);
+        assert_eq!(deck.layout[53], 6);
+
+        deck.count_cut();
+
+        assert_ne!(old_layout, deck.layout);
+        assert!(is_proper_deck(&deck));
+
+        let expected: Vec<u32> = vec![3, 4, 5];
+
         assert_eq!(expected, deck.layout);
     }
 }
