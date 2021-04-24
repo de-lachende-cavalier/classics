@@ -1,6 +1,6 @@
 - [x] Refactor the whole thing with better encapsulation (using traits and structs and impls, etc.)
 - [x] Add decryption tests to all the test_known_pairs() in cipher/ (check out scytale.rs to see what i mean)
-- [ ] Implement the Solitaire cipher (by Schneier)
+- [x] Implement the Solitaire cipher (by Schneier)
 - [ ] Refactor once again (the methods of the various structs should take selfs as parameters (some of them, at least), also the test_correct methods should be more like the one in solitaire.rs (aka using different keys))
 - [ ] Manage the various available ciphers in lib.rs through some config file (YAML, JSON or some other format) => updating manually is a pain
 - [ ] Further inspect scytale.rs (still some work to do on that)

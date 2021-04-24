@@ -6,5 +6,4 @@ pub mod solitaire;
 pub mod vigenere;
 
 // accessible only by modules within ciphers/
-mod card_deck;
 mod utils;

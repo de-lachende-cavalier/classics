@@ -5,13 +5,13 @@ use clap::{App, Arg, ArgMatches};
 pub fn get_opts() -> ArgMatches<'static> {
     App::new("-- Classical Crypto Toolkit --")
         .about("A collection of classical ciphers.")
-        .help_message("Prints help information (--help for more).")
+        .help_message("Prints help information (--help for more details).")
         .version_message("Prints version information.")
         .arg(
             Arg::with_name("cipher")
                 .help("Specifies the cipher to use (use --help to see a complete list).")
                 // TODO put all these options in a config file
-                .long_help("Available options are: shift, monoalphabetic, scytale and vigenere.")
+                .long_help("Available options are: shift, monoalphabetic, scytale, vigenere and solitaire.")
                 .required(true)
                 .takes_value(true)
                 .index(1),
@@ -24,7 +24,7 @@ pub fn get_opts() -> ArgMatches<'static> {
                 .index(2),
         )
         .arg(Arg::with_name("data")
-                .help("Specifies the data to read from stdin (in case no file has been specified with -f.)")
+                .help("Specifies the data to read from stdin (in case no file has been specified with -f).")
                 .takes_value(true)
                 .required_unless("file")
                 .index(3)

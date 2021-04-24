@@ -1,9 +1,10 @@
 mod ciphers;
 
+use ciphers::solitaire::solitaire::SolitaireCipher;
 use ciphers::monoalphabetic::MonoalphaCipher;
-use ciphers::scytale::Scytale;
-use ciphers::shift::ShiftCipher;
 use ciphers::vigenere::VigenereCipher;
+use ciphers::shift::ShiftCipher;
+use ciphers::scytale::Scytale;
 
 use std::fs::read_to_string;
 
@@ -70,6 +71,11 @@ pub fn encrypt_data(cipher: &str, data: &str, key: &str) -> String {
 
             scytale.encrypt(data)
         }
+        "solitaire" => {
+            let solitaire_c = SolitaireCipher::new(key);
+
+            solitaire_c.encrypt(data)
+        }
         _ => {
             panic!("This cipher has not yet been implemented or it doesn't exist.");
         }
@@ -107,6 +113,11 @@ pub fn decrypt_data(cipher: &str, data: &str, key: &str) -> String {
             let scytale = Scytale::new(length.unwrap());
 
             scytale.decrypt(data)
+        }
+        "solitaire" => {
+            let solitaire_c = SolitaireCipher::new(key);
+
+            solitaire_c.decrypt(data)
         }
         _ => {
             panic!("This cipher has not yet been implemented or it doesn't exist.");

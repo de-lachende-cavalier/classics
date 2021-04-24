@@ -1,6 +1,6 @@
 use super::card_deck::Deck;
 // encryption/decryption functions just like Vigenere => repeated shift cipher
-use super::shift::ShiftCipher;
+use super::super::shift::ShiftCipher;
 use crate::Cipher;
 
 pub struct SolitaireCipher {
