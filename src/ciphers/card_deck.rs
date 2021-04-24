@@ -3,9 +3,9 @@ use rand_pcg::Pcg64;
 use rand_seeder::Seeder;
 
 pub struct Deck {
-    layout: Vec<u32>, // represent the cards by their bridge suits 
-                      // first joker = 53
-                      // second joker = 54
+    layout: Vec<u32>, // represent the cards by their bridge suits
+                      // A joker = 53
+                      // B joker = 54
 }
 
 impl Deck {
@@ -15,7 +15,24 @@ impl Deck {
         Deck { layout: init_state }
     }
 
-    pub fn shuffle(&mut self, seed: &str) {
+    /// Takes care of all the steps necessary to prepare the deck for encryption/decryption.
+    pub fn prepare(&mut self, seed: &str) {
+        self.key_deck(seed);
+
+        self.swap_A_joker();
+
+        self.swap_B_joker();
+
+        self.triple_cut();
+
+        self.count_cut();
+    }
+
+    /// Keys the deck.
+    ///
+    /// The keying is done in a different way than the one specified by Schneier (because
+    /// my way is much simpler and probably makes for a much more secure randomization).
+    fn key_deck(&mut self, seed: &str) {
         let mut rng: Pcg64 = Seeder::from(seed).make_rng();
         // not using a CSPRNG (to make it more realistic)
         // Schneier suggests shuffling at list six times
@@ -24,7 +41,60 @@ impl Deck {
         }
     }
 
-    pub fn triple_cut(&mut self) {
+    /// First step of keystream preparation.
+    ///
+    /// We find the A joker (53) and swap it with the card beneath it.
+    /// If the joker is at the bottom we swap it with the first card in the deck.
+    fn swap_A_joker(&mut self) {
+        for (i, v) in self.layout.iter().enumerate() {
+            if *v == 53 {
+                if i == 53 {
+                    // joker A at bottom
+                    self.layout.swap(i, 0);
+                } else {
+                    // joker A somewhere in the middle
+                    self.layout.swap(i, i + 1);
+                }
+
+                break;
+            }
+        }
+    }
+
+    /// Second step of keystream preparation.
+    ///
+    /// We find the B joker (53) and swap it with the card that is two cards beneath it.
+    /// If the joker is the bottom card, move it below the second card of the self.
+    /// If the joker is the second to last card, move it below the top card of the self.
+    fn swap_B_joker(&mut self) {
+        for (i, v) in self.layout.iter().enumerate() {
+            if *v == 54 {
+                if i == 53 {
+                    // joker B at bottom
+                    self.layout.swap(i, 2);
+                } else if i == 52 {
+                    // joker B secont to last
+                    self.layout.swap(i, 1);
+                } else {
+                    // joker B somewhere in the middle
+                }
+
+                break;
+            }
+        }
+    }
+
+    /// Performs a triple cut.
+    ///
+    /// Performing a triple cut means swapping the cards above the first joker (in order) with the
+    /// cards below the second joker, while leaving the cards between the two jokers (joker
+    /// included) in the same state.
+    ///
+    /// If our deck is represented as 'A J1 M J2 B', with A := cards above the first joker, J1
+    ///                                                   M := cards between the two jokers
+    ///                                                   B := cards below the second joker, J2
+    /// Then, after a triple cut, the deck will appear as such: 'B J1 M J2 A'.
+    fn triple_cut(&mut self) {
         let fj_idx; // fj = first joker
         let sj_idx; // sj = second joker
 
@@ -50,22 +120,35 @@ impl Deck {
         new_layout.append(&mut Vec::from(above_first));
 
         // sanity check
-        assert_eq!(old_layout.len(), new_layout.len());
+        assert_eq!(new_layout.len(), 54);
 
         self.layout = new_layout;
     }
 
     // TODO => look into a way to abstract the actual process of the cut (from "let cur_layout..."
     // onwards (it's very similar to above))
-    pub fn count_cut(&mut self) {
-        let bottom_card = self.layout.pop().unwrap();
+    /// Performs a count cut.
+    ///
+    /// Performing a count cut means looking at the value of the bottom card (using the bridge
+    /// order of suits), then counting down from the top card a number of cards equivalent to the
+    /// bottom card's value and finally cutting after the card we arrived at, leaving the bottom
+    /// card at the bottom. Put in another way, supposing the value of the bottom card is b, it
+    /// means removing b cards from the top of the deck and putting them on the bottom (not after
+    /// the bottom card though).
+    ///
+    /// If we represent our deck as 'c1, c2, c3, c4, ..., c53, 4'  with 4 being the value of the
+    /// bottom card
+    /// Then, after a count cut, the layout of the deck will be 'c5, c6, ..., c53, c1, ..., c4, 4'
+    fn count_cut(&mut self) {
         // if the bottom card is the joker there's no need to cut
-        if bottom_card == 53 || bottom_card == 54 {
+        if *self.layout.last().unwrap() == 53 || *self.layout.last().unwrap() == 54 {
             return;
         }
 
+        let bottom_card = self.layout.pop().unwrap();
+
         let cur_layout = &self.layout;
-        let (above_card, rest) = cur_layout.split_at(bottom_card as usize - 1); // -1 cause i popped the bottom card
+        let (above_card, rest) = cur_layout.split_at(bottom_card as usize); // we have to cut AFTER the card
 
         let mut new_layout: Vec<u32> = Vec::new();
 
@@ -74,13 +157,13 @@ impl Deck {
         new_layout.push(bottom_card); // the bottom card must stay at the bottom
 
         // sanity check
-        assert_eq!(cur_layout.len(), new_layout.len());
+        assert_eq!(new_layout.len(), 54);
 
         self.layout = new_layout;
     }
 
     /// Finds the index corresponding to the first occurence of the joker
-    /// given a certain deck.
+    /// given a certain deck, regardless of whether the joker is A or B.
     fn find_first_joker_index(deck: &Vec<u32>) -> usize {
         let mut joker_idx: usize = 0;
 
@@ -126,7 +209,7 @@ mod tests {
 
         for s in seeds.iter() {
             let mut deck = Deck::new();
-            deck.shuffle(s);
+            deck.key_it(s);
 
             assert!(is_proper_deck(&deck));
 
@@ -135,14 +218,14 @@ mod tests {
 
         for (s, l) in seeds.iter().zip(layouts) {
             let mut deck = Deck::new();
-            deck.shuffle(s);
+            deck.key_it(s);
 
             assert_eq!(l, deck.layout);
         }
     }
 
     #[test]
-    fn test_double_cut() {
+    fn test_triple_cut_double_cut() {
         let mut deck = Deck::new();
         let old_layout = deck.layout.clone();
 
@@ -167,7 +250,7 @@ mod tests {
     }
 
     #[test]
-    fn test_single_cut_above() {
+    fn test_triple_cut_single_cut_above() {
         let mut deck = Deck::new();
         let old_layout = deck.layout.clone();
 
@@ -193,7 +276,7 @@ mod tests {
     }
 
     #[test]
-    fn test_back_to_back_jokers() {
+    fn test_triple_cut_back_to_back_jokers() {
         let mut deck = Deck::new();
         let old_layout = deck.layout.clone();
 
@@ -234,8 +317,29 @@ mod tests {
         assert_ne!(old_layout, deck.layout);
         assert!(is_proper_deck(&deck));
 
-        let expected: Vec<u32> = vec![3, 4, 5];
+        let expected: Vec<u32> = vec![
+            7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+            29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
+            51, 52, 53, 1, 2, 3, 4, 5, 54, 6,
+        ];
 
         assert_eq!(expected, deck.layout);
+    }
+
+    #[test]
+    fn test_count_cut_joker_bottom() {
+        let mut deck = Deck::new();
+
+        // swap a bunch of cards but leave the jokers where they are
+        deck.layout.swap(5, 7);
+        deck.layout.swap(1, 19);
+        deck.layout.swap(33, 49);
+
+        let old_layout = deck.layout.clone();
+
+        deck.count_cut();
+
+        assert!(is_proper_deck(&deck));
+        assert_eq!(deck.layout, old_layout);
     }
 }
