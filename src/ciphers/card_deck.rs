@@ -45,6 +45,7 @@ impl Deck {
     ///
     /// We find the A joker (53) and swap it with the card beneath it.
     /// If the joker is at the bottom we swap it with the first card in the deck.
+    #[allow(non_snake_case)]
     fn swap_A_joker(&mut self) {
         for (i, v) in self.layout.iter().enumerate() {
             if *v == 53 {
@@ -64,8 +65,9 @@ impl Deck {
     /// Second step of keystream preparation.
     ///
     /// We find the B joker (53) and swap it with the card that is two cards beneath it.
-    /// If the joker is the bottom card, move it below the second card of the self.
-    /// If the joker is the second to last card, move it below the top card of the self.
+    /// If the joker is the bottom card, move it below the second card of the deck.
+    /// If the joker is the second to last card, move it below the top card of the deck.
+    #[allow(non_snake_case)]
     fn swap_B_joker(&mut self) {
         for (i, v) in self.layout.iter().enumerate() {
             if *v == 54 {
@@ -77,6 +79,7 @@ impl Deck {
                     self.layout.swap(i, 1);
                 } else {
                     // joker B somewhere in the middle
+                    self.layout.swap(i, i + 2);
                 }
 
                 break;
@@ -203,13 +206,13 @@ mod tests {
     }
 
     #[test]
-    fn test_shuffle() {
+    fn test_keying() {
         let mut layouts: Vec<Vec<u32>> = Vec::new();
         let seeds = vec!["one", "two", "testing"];
 
         for s in seeds.iter() {
             let mut deck = Deck::new();
-            deck.key_it(s);
+            deck.key_deck(s);
 
             assert!(is_proper_deck(&deck));
 
@@ -218,14 +221,57 @@ mod tests {
 
         for (s, l) in seeds.iter().zip(layouts) {
             let mut deck = Deck::new();
-            deck.key_it(s);
+            deck.key_deck(s);
 
             assert_eq!(l, deck.layout);
         }
     }
 
     #[test]
-    fn test_triple_cut_double_cut() {
+    #[allow(non_snake_case)]
+    fn test_swap_A_joker() {
+        let mut deck = Deck::new();
+
+        deck.layout.swap(52, 53);
+        assert_eq!(deck.layout[53], 53);
+
+        // joker A at bottom
+        deck.swap_A_joker();
+        assert_eq!(deck.layout[0], 53);
+        assert_eq!(deck.layout[53], 1);
+
+        // joker A at top
+        deck.swap_A_joker();
+        assert_eq!(deck.layout[1], 53);
+        assert_eq!(deck.layout[0], 2);
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn test_swap_B_joker() {
+        let mut deck = Deck::new();
+
+        // joker B at bottom
+        deck.swap_B_joker();
+        assert_eq!(deck.layout[2], 54);
+        assert_eq!(deck.layout[53], 3);
+
+        // joker B second to last
+        deck.layout.swap(2, 52);
+        assert_eq!(deck.layout[52], 54);
+
+        deck.swap_B_joker();
+        assert_eq!(deck.layout[1], 54);
+        assert_eq!(deck.layout[52], 2);
+
+        // joker B at top
+        deck.swap_B_joker();
+        assert_eq!(deck.layout[3], 54);
+        assert_eq!(deck.layout[1], 4);
+    }
+
+    #[test]
+    fn test_triple_cut_above_below() {
         let mut deck = Deck::new();
         let old_layout = deck.layout.clone();
 
@@ -250,7 +296,7 @@ mod tests {
     }
 
     #[test]
-    fn test_triple_cut_single_cut_above() {
+    fn test_triple_cut_single_above() {
         let mut deck = Deck::new();
         let old_layout = deck.layout.clone();
 
