@@ -15,17 +15,17 @@ impl Deck {
         Deck { layout: init_state }
     }
 
-    /// Takes care of all the steps necessary to prepare the deck for encryption/decryption.
-    pub fn prepare(&mut self, seed: &str) {
+    /// Generates a single keystream value.
+    ///
+    /// This function must be repeated for each plaintext/ciphertext character.
+    fn get_output_card(&mut self, seed: &str) -> u32 {
         self.key_deck(seed);
-
         self.swap_A_joker();
-
         self.swap_B_joker();
-
         self.triple_cut();
-
         self.count_cut();
+
+        self.layout[self.layout[0] as usize]
     }
 
     /// Keys the deck.
