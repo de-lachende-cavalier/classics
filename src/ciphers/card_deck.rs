@@ -18,21 +18,25 @@ impl Deck {
     /// Generates a single keystream value.
     ///
     /// This function must be repeated for each plaintext/ciphertext character.
-    fn get_output_card(&mut self, seed: &str) -> u32 {
-        self.key_deck(seed);
+    pub fn get_output_card(&mut self) -> u32 {
         self.swap_A_joker();
         self.swap_B_joker();
         self.triple_cut();
         self.count_cut();
 
-        self.layout[self.layout[0] as usize]
+        let idx = self.layout[0] as usize;
+        if idx == 54 {
+            self.layout[0]
+        } else {
+            self.layout[idx]
+        }
     }
 
     /// Keys the deck.
     ///
     /// The keying is done in a different way than the one specified by Schneier (because
     /// my way is much simpler and probably makes for a much more secure randomization).
-    fn key_deck(&mut self, seed: &str) {
+    pub fn key_deck(&mut self, seed: &str) {
         let mut rng: Pcg64 = Seeder::from(seed).make_rng();
         // not using a CSPRNG (to make it more realistic)
         // Schneier suggests shuffling at list six times
