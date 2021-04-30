@@ -1,10 +1,10 @@
 mod ciphers;
 
-use ciphers::solitaire::solitaire::SolitaireCipher;
 use ciphers::monoalphabetic::MonoalphaCipher;
-use ciphers::vigenere::VigenereCipher;
-use ciphers::shift::ShiftCipher;
 use ciphers::scytale::Scytale;
+use ciphers::shift::ShiftCipher;
+use ciphers::solitaire::solitaire::SolitaireCipher;
+use ciphers::vigenere::VigenereCipher;
 
 use std::fs::read_to_string;
 

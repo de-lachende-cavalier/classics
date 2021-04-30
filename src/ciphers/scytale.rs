@@ -25,8 +25,6 @@ impl Scytale {
                 unwinded.push(text.chars().nth(j).unwrap());
             }
         }
-        // TODO can i get the proper length in the loops above
-        // without having to truncate?
         unwinded.truncate(l);
 
         unwinded
@@ -93,6 +91,7 @@ mod tests {
         let plaintext = String::from("Iamhurtverybadly");
 
         // FIXME something very subtle is going on here...
+        // FIXME tried copypasting code from another implementation and still didn't work!?
         for length in 1..=plaintext.len() {
             let cipher = Scytale::new(length);
             assert_eq!(

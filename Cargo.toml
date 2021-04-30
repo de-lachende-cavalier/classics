@@ -29,3 +29,6 @@ harness = false
 name = "vigenere_bench"
 harness = false
 
+[[bench]]
+name = "solitaire_bench"
+harness = false

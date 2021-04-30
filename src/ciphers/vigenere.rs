@@ -51,6 +51,7 @@ impl Cipher for VigenereCipher {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::seq::SliceRandom;
 
     #[test]
     #[should_panic]
@@ -98,10 +99,18 @@ mod tests {
     #[test]
     #[ignore]
     fn test_correct() {
-        let cipher = VigenereCipher::new("lemon");
+        let keys = [
+            "lemon",
+            "jackpot",
+            "nu",
+            "anincrediblylongkeyaverylongkeyindeed",
+        ];
         let plaintext = String::from("lechiffre");
 
         for _ in 0..1000 {
+            let choice = keys.choose(&mut rand::thread_rng()).unwrap();
+
+            let cipher = VigenereCipher::new(*choice);
             assert_eq!(
                 plaintext.to_uppercase(),
                 cipher.decrypt(&cipher.encrypt(&plaintext))

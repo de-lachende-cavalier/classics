@@ -26,7 +26,7 @@ impl MonoalphaCipher {
             map.insert(ch, ch);
         }
     }
-    ///
+
     /// Builds the HashMap that holds the correspondence between the key alphabet
     /// and the original alphabet (only English in our case), used for encryption.
     fn build_map(key: &str) -> HashMap<char, char> {
@@ -115,6 +115,7 @@ impl Cipher for MonoalphaCipher {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::seq::SliceRandom;
 
     #[test]
     #[should_panic]
@@ -193,10 +194,18 @@ mod tests {
     #[test]
     #[ignore]
     fn test_correct() {
-        let cipher = MonoalphaCipher::new("FJHWOTYRXMKBPIAZEVNULSGDCQ");
+        let alphabets = [
+            "FJHWOTYRXMKBPIAZEVNULSGDCQ",
+            "JFAWOTYRXMKBPIHQEVNULSGDCZ",
+            "FPIAZEVNULSGDCQJHWOTYRXMKB",
+            "HWOTFJYRXMKBPIEVNULSGDCQAZ",
+        ];
         let plaintext = String::from("monoalphabetic");
 
         for _ in 0..1000 {
+            let choice = alphabets.choose(&mut rand::thread_rng()).unwrap();
+
+            let cipher = MonoalphaCipher::new(*choice);
             assert_eq!(
                 plaintext.to_uppercase(),
                 cipher.decrypt(&cipher.encrypt(&plaintext))
