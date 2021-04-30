@@ -6,12 +6,15 @@ pub struct ShiftCipher {
 }
 
 impl ShiftCipher {
+    /// Initializes a new shift cipher with a given shift amount.
     pub fn new(key: i8) -> Self {
         ShiftCipher { key }
     }
 
-    /// Shifts character ch by n in either direction
-    /// ==> (ch [+-] n) mod 26
+    /// Shifts character ch by n in either direction.
+    ///
+    /// Mathematically equivalent to (ch [+-] n) mod 26, with [] having the same meaning
+    /// as one would expect when using regexps.
     pub fn shift_by(n: i8, ch: char) -> char {
         // don't encrypt digits
         if ch.is_ascii_digit() {

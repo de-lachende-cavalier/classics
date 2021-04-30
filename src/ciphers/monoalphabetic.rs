@@ -6,8 +6,7 @@ pub struct MonoalphaCipher {
 }
 
 impl MonoalphaCipher {
-    // using a Result here is probably a better idea, but to mantain
-    // a uniform interface, i'll keep the panic!()
+    /// Initializes a monoalphabetic cipher with the given alphabet (if valid).
     pub fn new(key: &str) -> Self {
         if MonoalphaCipher::is_alphabet(key) {
             MonoalphaCipher {

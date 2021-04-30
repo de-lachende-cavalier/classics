@@ -6,16 +6,29 @@ pub struct Scytale {
 }
 
 impl Scytale {
+    /// Creates a new scytale of a certain length.
+    ///
+    /// I consider the scytale to have two dimensions: length and diameter, length is its extension
+    /// on the x direction, diameter is its extension in the y direction, e.g.: | a b c d |
+    ///                                                                         | e f g h |
+    ///                                                                         | l m n o | is a scytale of
+    ///                                                                                     length = 4 and
+    ///                                                                                     diameter = 3
     pub fn new(key: usize) -> Self {
         Scytale { key }
     }
 
+    /// Computes the diameter of the scytale given its length.
     fn get_diameter(s: &str, length: usize) -> usize {
         let padded_s = pad(s, length as u32, '.');
 
         padded_s.len() / length
     }
 
+    /// Simulates wrapping the parchment around the scytale.
+    ///
+    /// Mathematically speaking, my implementation and the traditional implementation utilizing
+    /// matrices et alia should be equivalent.
     fn wrap_around_scytale(text: &str, n: usize) -> String {
         let mut unwinded = String::new();
         let l = text.len();

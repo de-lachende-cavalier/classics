@@ -8,6 +8,8 @@ pub struct SolitaireCipher {
 }
 
 impl SolitaireCipher {
+    /// Create a new solitarie cipher given the key (the seed needed to randomize the initial deck
+    /// configuration).
     pub fn new(key: &str) -> Self {
         SolitaireCipher {
             key: key.to_string(),

@@ -9,6 +9,7 @@ pub struct Deck {
 }
 
 impl Deck {
+    /// Initializes a new card deck, with the cards ordered in ascending order.
     pub fn new() -> Self {
         let init_state = (1..=54).collect::<Vec<u32>>();
 
@@ -132,8 +133,6 @@ impl Deck {
         self.layout = new_layout;
     }
 
-    // TODO => look into a way to abstract the actual process of the cut (from "let cur_layout..."
-    // onwards (it's very similar to above))
     /// Performs a count cut.
     ///
     /// Performing a count cut means looking at the value of the bottom card (using the bridge

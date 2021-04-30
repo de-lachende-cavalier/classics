@@ -7,6 +7,7 @@ pub struct VigenereCipher {
 }
 
 impl VigenereCipher {
+    /// Initializes a new Vigenere cipher given the key.
     pub fn new(key: &str) -> Self {
         VigenereCipher {
             key: key.to_string(),

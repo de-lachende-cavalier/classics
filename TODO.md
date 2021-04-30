@@ -5,5 +5,5 @@
 - [x] Further inspect scytale.rs (still some work to do on that)
     - [ ] There's something weird going on with test_correct...
 - [x] Add benchmarks
-- [ ] Add proper documentation (also, docs are only show for the lib.rs file (?))
+- [x] Add proper documentation (also, docs are only show for the lib.rs file (?))
 - [ ] Optimize the implementation

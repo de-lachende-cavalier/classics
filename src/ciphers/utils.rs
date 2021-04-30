@@ -1,5 +1,5 @@
 /// Pad a string until its length is a multiple of n (the closest multiple
-/// of n with respect to the string's initial length)
+/// of n with respect to the string's initial length).
 ///
 /// If n > data.len() then data will be padded until it's of length n.
 pub fn pad(data: &str, n: u32, pad_char: char) -> String {

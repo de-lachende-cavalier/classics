@@ -9,8 +9,9 @@ use ciphers::vigenere::VigenereCipher;
 use std::fs::read_to_string;
 
 pub(crate) trait Cipher {
-    /// Cleans up the input by removing all characters that are not alphanumeric
-    /// (Returns an uppercase String)
+    /// Cleans up the input by removing all characters that are not alphanumeric.
+    ///
+    /// Returns an uppercase String.
     fn clean_input(input: &str) -> String {
         let cleaned = input
             .chars()
@@ -28,7 +29,7 @@ pub(crate) trait Cipher {
 }
 
 /// Gets data based on the CLI args provided (if a file has been specified that one is used
-/// otherwise use stdin)
+/// otherwise use stdin).
 pub fn get_data(file: Option<&str>, data: Option<&str>) -> String {
     if file.is_some() {
         println!("{:?}", file);
@@ -38,9 +39,9 @@ pub fn get_data(file: Option<&str>, data: Option<&str>) -> String {
     }
 }
 
+/// Encrypts the given data provided given a choice of cipher.
 pub fn encrypt_data(cipher: &str, data: &str, key: &str) -> String {
     match cipher {
-        // TODO put all these options in a config file
         "shift" => {
             let shift_amount = key.parse::<i8>();
             if shift_amount.is_err() {
@@ -82,6 +83,7 @@ pub fn encrypt_data(cipher: &str, data: &str, key: &str) -> String {
     }
 }
 
+/// Decrypts the given data give a choice of cipher.
 pub fn decrypt_data(cipher: &str, data: &str, key: &str) -> String {
     match cipher {
         "shift" => {
