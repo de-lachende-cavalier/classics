@@ -1,5 +1,5 @@
-# About
-This was my first semi serious project in Rust and it was meant to help me experiment with the language, with cargo and a bunch of interesting and useful crates.
+# Warning!
+The project is mostly of experimental nature: the implementations are not the best out there, nor are they particularly optimized!
 
 # Reference
 A list of classical ciphers can be found [here](https://en.wikipedia.org/wiki/Category:Classical_ciphers).
