@@ -1,5 +1,5 @@
 # Warning!
-The project is mostly of experimental nature: the implementations are not the best out there, nor are they particularly optimized!
+The project is mostly of experimental nature: the implementations are not the best ones out there, nor are they particularly optimized!
 
 # Reference
 A list of classical ciphers can be found [here](https://en.wikipedia.org/wiki/Category:Classical_ciphers).
