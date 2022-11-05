@@ -12,7 +12,7 @@ fn main() {
 
     let data = get_data(opts.value_of("file"), opts.value_of("data"));
 
-    // no fancy shit output-wise to allow people to easily edit the output when
+    // no fancy stuff output-wise to allow people to easily edit the output when
     // redirecting to other files/using pipes
     if opts.is_present("encrypt") {
         let encrypted = encrypt_data(cipher, &data, key);
